@@ -25,7 +25,7 @@ elseif (CURRENT_RENDERER STREQUAL "OpenGL ES 3.0")
 	set(CURRENT_RENDERER_LIBRARIES OpenGL::GL)
 endif ()
 
-add_executable(TRIAD-6 src/${CURRENT_RENDERER_SOURCE_DIR}/renderer.cpp src/main.cpp)
+add_executable(TRIAD-6 src/${CURRENT_RENDERER_SOURCE_DIR}/renderer.cpp src/bvs1.cpp src/machine.cpp src/main.cpp)
 target_include_directories(TRIAD-6 PUBLIC "${PROJECT_SOURCE_DIR}/include" "${SDL2_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}/include/${CURRENT_RENDERER_INCLUDE_DIR}")
 target_compile_features(TRIAD-6 PRIVATE cxx_std_20)
 target_link_libraries(TRIAD-6 SDL2 ${CURRENT_RENDERER_LIBRARIES} fmt::fmt)
