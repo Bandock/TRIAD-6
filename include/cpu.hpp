@@ -55,21 +55,170 @@ namespace TRIAD_6
 		template <typename T, RegisterType destination_register> requires HasCurrentCycleState<T>
 		void LoadFromMemoryToRegister_ImmediateValueMode(T *obj)
 		{
+			BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
 			if constexpr (destination_register == RegisterType::A)
 			{
-				BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
 				if ((obj->F & bu_flag_check) == bu_flag_check)
 				{
 					obj->A = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+					if (static_cast<int16_t>(obj->A) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else if (static_cast<int16_t>(obj->A) == 0)
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+					else
+					{
+						obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+					}
 					fmt::print("Signed Accumulator:  {}\n", static_cast<int16_t>(obj->A));
 				}
 				else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
 				{
-					obj->A = obj->unbalanced_memory_read(obj->PC, obj->CurrentMachine);
+					BCT::UTryte tmp = obj->unbalanced_memory_read(obj->PC, obj->CurrentMachine);
+					obj->A = tmp;
+					if (static_cast<uint16_t>(tmp) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
 					fmt::print("Unsigned Accumulator:  {}\n", static_cast<uint16_t>(obj->A));
 				}
-				++obj->PC;
 			}
+			else if constexpr (destination_register == RegisterType::C)
+			{
+				if ((obj->F & bu_flag_check) == bu_flag_check)
+				{
+					obj->C = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+					if (static_cast<int16_t>(obj->C) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else if (static_cast<int16_t>(obj->C) == 0)
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+					else
+					{
+						obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+					}
+				}
+				else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
+				{
+					BCT::UTryte tmp = obj->unbalanced_memory_read(obj->PC, obj->CurrentMachine);
+					obj->C = tmp;
+					if (static_cast<uint16_t>(tmp) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+				}
+			}
+			else if constexpr (destination_register == RegisterType::D)
+			{
+				if ((obj->F & bu_flag_check) == bu_flag_check)
+				{
+					obj->D = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+					if (static_cast<int16_t>(obj->D) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else if (static_cast<int16_t>(obj->D) == 0)
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+					else
+					{
+						obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+					}
+				}
+				else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
+				{
+					BCT::UTryte tmp = obj->unbalanced_memory_read(obj->PC, obj->CurrentMachine);
+					obj->D = tmp;
+					if (static_cast<uint16_t>(tmp) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+				}
+			}
+			else if constexpr (destination_register == RegisterType::X)
+			{
+				if ((obj->F & bu_flag_check) == bu_flag_check)
+				{
+					obj->X = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+					if (static_cast<int16_t>(obj->X) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else if (static_cast<int16_t>(obj->X) == 0)
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+					else
+					{
+						obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+					}
+				}
+				else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
+				{
+					BCT::UTryte tmp = obj->unbalanced_memory_read(obj->PC, obj->CurrentMachine);
+					obj->X = tmp;
+					if (static_cast<uint16_t>(tmp) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+				}
+			}
+			else if constexpr (destination_register == RegisterType::Y)
+			{
+				if ((obj->F & bu_flag_check) == bu_flag_check)
+				{
+					obj->Y = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+					if (static_cast<int16_t>(obj->Y) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else if (static_cast<int16_t>(obj->Y) == 0)
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+					else
+					{
+						obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+					}
+				}
+				else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
+				{
+					BCT::UTryte tmp = obj->unbalanced_memory_read(obj->PC, obj->CurrentMachine);
+					obj->Y = tmp;
+					if (static_cast<uint16_t>(tmp) > 0)
+					{
+						obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+					}
+					else
+					{
+						obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+					}
+				}
+			}
+			++obj->PC;
 			obj->current_cycle_state = CycleState::Fetch;
 		}
 
@@ -279,6 +428,10 @@ namespace TRIAD_6
 		}
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '0', '0'>())] = Instruction::NoOperation<T, InstructionCallbackType, nullptr>; // NOP
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '0'>())] = Instruction::LoadFromMemoryToRegister_ImmediateValueMode<T, RegisterType::A>; // LDA #Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '1'>())] = Instruction::LoadFromMemoryToRegister_ImmediateValueMode<T, RegisterType::C>; // LDC #Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '2'>())] = Instruction::LoadFromMemoryToRegister_ImmediateValueMode<T, RegisterType::D>; // LDD #Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '3'>())] = Instruction::LoadFromMemoryToRegister_ImmediateValueMode<T, RegisterType::X>; // LDX #Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '4'>())] = Instruction::LoadFromMemoryToRegister_ImmediateValueMode<T, RegisterType::Y>; // LDY #Op
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '8', '0'>())] = Instruction::TransferFromRegisterToRegister<T, RegisterType::C, RegisterType::A>; // TCA
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '8', '1'>())] = Instruction::TransferFromRegisterToRegister<T, RegisterType::D, RegisterType::A>; // TDA
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '8', '2'>())] = Instruction::TransferFromRegisterToRegister<T, RegisterType::X, RegisterType::A>; // TXA
