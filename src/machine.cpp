@@ -3,17 +3,25 @@
 #include <cstring>
 #include <fmt/core.h>
 
-TRIAD_6::Machine::Machine() : MainCPU(4000000.0, this, TRIAD_6::memory_read<TRIAD_6::BCT::Tryte, TRIAD_6::Machine>, TRIAD_6::memory_write<TRIAD_6::BCT::Tryte, TRIAD_6::Machine>, TRIAD_6::memory_read<TRIAD_6::BCT::UTryte, TRIAD_6::Machine>, TRIAD_6::memory_write<TRIAD_6::BCT::UTryte, TRIAD_6::Machine>), RAM(TRIAD_6::Utility::KiloTrytesToTrytes(1)), memory(TRIAD_6::Utility::BCT_TrytesToBytes(RAM)), cpu_tp(std::chrono::high_resolution_clock::now()), cpu_accumulator(0.0)
+TRIAD_6::Machine::Machine() : MainCPU(1000000.0, this, TRIAD_6::memory_read<TRIAD_6::BCT::Tryte, TRIAD_6::Machine>, TRIAD_6::memory_write<TRIAD_6::BCT::Tryte, TRIAD_6::Machine>, TRIAD_6::memory_read<TRIAD_6::BCT::UTryte, TRIAD_6::Machine>, TRIAD_6::memory_write<TRIAD_6::BCT::UTryte, TRIAD_6::Machine>), RAM(TRIAD_6::Utility::KiloTrytesToTrytes(1)), memory(TRIAD_6::Utility::BCT_TrytesToBytes(RAM)), cpu_tp(std::chrono::high_resolution_clock::now()), cpu_accumulator(0.0)
 {
 	memory_write<BCT::UTryte, Machine>(1458, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'P', '3'>());
 	memory_write<BCT::Tryte, Machine>(1459, this, BCT::Tryte(-1));
-	memory_write<BCT::UTryte, Machine>(1460, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '0'>());
-	memory_write<BCT::UTryte, Machine>(1461, this, BCT::UTryte(27));
-	memory_write<BCT::UTryte, Machine>(1462, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'P', '3'>());
-	memory_write<BCT::Tryte, Machine>(1463, this, BCT::Tryte(+1));
-	memory_write<BCT::UTryte, Machine>(1464, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '2', '0'>());
-	memory_write<BCT::Tryte, Machine>(1465, this, BCT::Tryte(-27));
-	memory_write<BCT::UTryte, Machine>(1466, this, BCT::UTryte(2));
+	memory_write<BCT::UTryte, Machine>(1460, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>());
+	memory_write<BCT::UTryte, Machine>(1461, this, BCT::UTryte(3));
+	memory_write<BCT::UTryte, Machine>(1462, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>());
+	memory_write<BCT::UTryte, Machine>(1463, this, BCT::UTryte(1));
+	memory_write<BCT::UTryte, Machine>(1464, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>());
+	memory_write<BCT::UTryte, Machine>(1465, this, BCT::UTryte(2));
+	memory_write<BCT::UTryte, Machine>(1466, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>());
+	memory_write<BCT::UTryte, Machine>(1467, this, BCT::UTryte(4));
+	memory_write<BCT::UTryte, Machine>(1468, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>());
+	memory_write<BCT::UTryte, Machine>(1469, this, BCT::UTryte(10));
+	memory_write<BCT::UTryte, Machine>(1470, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>());
+	memory_write<BCT::UTryte, Machine>(1471, this, BCT::UTryte(9));
+	memory_write<BCT::UTryte, Machine>(1472, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'C', '0'>());
+	memory_write<BCT::UTryte, Machine>(1473, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '0', '2'>());
+	memory_write<BCT::UTryte, Machine>(1474, this, BCT::GetValueInSeptemvigesimal<BCT::UTryte, '0', '2'>());
 }
 
 TRIAD_6::Machine::~Machine()
