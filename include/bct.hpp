@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <array>
+#include <bit>
 #include "utility.hpp"
 
 namespace TRIAD_6
@@ -17,12 +18,12 @@ namespace TRIAD_6
 
 		struct Tryte // Signed Tryte (for the balanced ternary system), use a 6-trit design for a tryte.
 		{
-			constexpr Tryte() : data { 0, 0 }
+			constexpr Tryte() : /* data { 0, 0 } */ data(0x000)
 			{
 			}
 
 			template <typename T> requires Utility::TypeCompatible<T, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, UTryte, UWord>
-			constexpr Tryte(T value) : data { 0, 0 }
+			constexpr Tryte(T value) : /* data { 0, 0 } */ data(0x000)
 			{
 				if constexpr (Utility::CheckCompatibleType<T, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t>())
 				{
@@ -39,35 +40,41 @@ namespace TRIAD_6
 					*/
 					if (s_value >= 0)
 					{
-						size_t byte_offset = 0;
+						// size_t byte_offset = 0;
 						size_t bit_offset = 0;
 						for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 						{
-							uint8_t c_data = (s_value + 1) % 3;
-							data[byte_offset] |= (c_data << bit_offset);
+							uint32_t c_data = (s_value + 1) % 3;
+							// data[byte_offset] |= (c_data << bit_offset);
+							data |= (c_data << bit_offset);
 							bit_offset += 2;
+							/*
 							if (bit_offset == 8)
 							{
 								bit_offset = 0;
 								++byte_offset;
 							}
+							*/
 							s_value = (s_value + 1) / 3;
 						}
 					}
 					else
 					{
-						size_t byte_offset = 0;
+						// size_t byte_offset = 0;
 						size_t bit_offset = 0;
 						for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 						{
-							uint8_t c_data = ((s_value - 1) % 3) + 2;
-							data[byte_offset] |= (c_data << bit_offset);
+							uint32_t c_data = ((s_value - 1) % 3) + 2;
+							// data[byte_offset] |= (c_data << bit_offset);
+							data |= (c_data << bit_offset);
 							bit_offset += 2;
+							/*
 							if (bit_offset == 8)
 							{
 								bit_offset = 0;
 								++byte_offset;
 							}
+							*/
 							s_value = (s_value - 1) / 3;
 						}
 					}
@@ -86,6 +93,26 @@ namespace TRIAD_6
 
 			void operator++()
 			{
+				size_t bit_offset = 0;
+				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
+				{
+					bool carry = false;
+					uint32_t c_data = ((data >> bit_offset) & 0x03);
+					++c_data;
+					if (c_data > 0x2)
+					{
+						carry = true;
+						c_data -= 0x3;
+					}
+					data &= ~(0x03 << bit_offset);
+					data |= (c_data << bit_offset);
+					bit_offset += 2;
+					if (!carry)
+					{
+						break;
+					}
+				}
+				/*
 				int16_t value = *this;
 				size_t byte_offset = 0;
 				size_t bit_offset = 0;
@@ -94,13 +121,16 @@ namespace TRIAD_6
 				{
 					value = -364;
 				}
-				memset(data.data(), 0, data.size());
+				*/
+				// memset(data.data(), 0, data.size());
+				/*
 				if (value >= 0)
 				{
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = (value + 1) % 3;
-						data[byte_offset] |= (c_data << bit_offset);
+						uint32_t c_data = (value + 1) % 3;
+						// data[byte_offset] |= (c_data << bit_offset);
+						data |= (c_data << bit_offset);
 						bit_offset += 2;
 						if (bit_offset == 8)
 						{
@@ -114,8 +144,9 @@ namespace TRIAD_6
 				{
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = ((value - 1) % 3) + 2;
-						data[byte_offset] |= (c_data << bit_offset);
+						uint32_t c_data = ((value - 1) % 3) + 2;
+						// data[byte_offset] |= (c_data << bit_offset);
+						data |= (c_data << bit_offset);
 						bit_offset += 2;
 						if (bit_offset == 8)
 						{
@@ -125,10 +156,31 @@ namespace TRIAD_6
 						value = (value - 1) / 3;
 					}
 				}
+				*/
 			}
 
 			void operator--()
 			{
+				size_t bit_offset = 0;
+				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
+				{
+					bool borrow = false;
+					uint32_t c_data = ((data >> bit_offset) & 0x03);
+					--c_data;
+					if (c_data > 0x2)
+					{
+						borrow = true;
+						c_data += 0x3;
+					}
+					data &= ~(0x03 << bit_offset);
+					data |= (c_data << bit_offset);
+					bit_offset += 2;
+					if (!borrow)
+					{
+						break;
+					}
+				}
+				/*
 				int16_t value = *this;
 				size_t byte_offset = 0;
 				size_t bit_offset = 0;
@@ -137,12 +189,14 @@ namespace TRIAD_6
 				{
 					value = 364;
 				}
-				memset(data.data(), 0, data.size());
+				*/
+				// memset(data.data(), 0, data.size());
+				/*
 				if (value >= 0)
 				{
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = (value + 1) % 3;
+						uint32_t c_data = (value + 1) % 3;
 						data[byte_offset] |= (c_data << bit_offset);
 						bit_offset += 2;
 						if (bit_offset == 8)
@@ -157,7 +211,7 @@ namespace TRIAD_6
 				{
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = ((value - 1) % 3) + 2;
+						uint32_t c_data = ((value - 1) % 3) + 2;
 						data[byte_offset] |= (c_data << bit_offset);
 						bit_offset += 2;
 						if (bit_offset == 8)
@@ -168,15 +222,19 @@ namespace TRIAD_6
 						value = (value - 1) / 3;
 					}
 				}
+				*/
 			}
 
 			constexpr void operator+=(Tryte source) // Balanced Addition
 			{
-				int16_t value = *this + source;
+				int32_t value = *this + source;
+				/*
 				for (size_t i = 0; i < data.size(); ++i)
 				{
 					data[i] = 0;
 				}
+				*/
+				data = 0;
 				if (value > 364)
 				{
 					value -= 729;
@@ -187,35 +245,41 @@ namespace TRIAD_6
 				}
 				if (value >= 0)
 				{
-					size_t byte_offset = 0;
+					// size_t byte_offset = 0;
 					size_t bit_offset = 0;
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = (value + 1) % 3;
-						data[byte_offset] |= (c_data << bit_offset);
+						uint32_t c_data = (value + 1) % 3;
+						// data[byte_offset] |= (c_data << bit_offset);
+						data |= (c_data << bit_offset);
 						bit_offset += 2;
+						/*
 						if (bit_offset == 8)
 						{
 							bit_offset = 0;
 							++byte_offset;
 						}
+						*/
 						value = (value + 1) / 3;
 					}
 				}
 				else
 				{
-					size_t byte_offset = 0;
+					// size_t byte_offset = 0;
 					size_t bit_offset = 0;
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = ((value - 1) % 3) + 2;
-						data[byte_offset] |= (c_data << bit_offset);
+						uint32_t c_data = ((value - 1) % 3) + 2;
+						// data[byte_offset] |= (c_data << bit_offset);
+						data |= (c_data << bit_offset);
 						bit_offset += 2;
+						/*
 						if (bit_offset == 8)
 						{
 							bit_offset = 0;
 							++byte_offset;
 						}
+						*/
 						value = (value - 1) / 3;
 					}
 				}
@@ -223,11 +287,14 @@ namespace TRIAD_6
 
 			constexpr void operator-=(Tryte source) // Balanced Subtraction
 			{
-				int16_t value = *this - source;
+				int32_t value = *this - source;
+				/*
 				for (size_t i = 0; i < data.size(); ++i)
 				{
 					data[i] = 0;
 				}
+				*/
+				data = 0;
 				if (value > 364)
 				{
 					value -= 729;
@@ -238,35 +305,41 @@ namespace TRIAD_6
 				}
 				if (value >= 0)
 				{
-					size_t byte_offset = 0;
+					// size_t byte_offset = 0;
 					size_t bit_offset = 0;
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = (value + 1) % 3;
-						data[byte_offset] |= (c_data << bit_offset);
+						uint32_t c_data = (value + 1) % 3;
+						// data[byte_offset] |= (c_data << bit_offset);
+						data |= (c_data << bit_offset);
 						bit_offset += 2;
+						/*
 						if (bit_offset == 8)
 						{
 							bit_offset = 0;
 							++byte_offset;
 						}
+						*/
 						value = (value + 1) / 3;
 					}
 				}
 				else
 				{
-					size_t byte_offset = 0;
+					// size_t byte_offset = 0;
 					size_t bit_offset = 0;
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = ((value - 1) % 3) + 2;
-						data[byte_offset] |= (c_data << bit_offset);
+						uint32_t c_data = ((value - 1) % 3) + 2;
+						// data[byte_offset] |= (c_data << bit_offset);
+						data |= (c_data << bit_offset);
 						bit_offset += 2;
+						/*
 						if (bit_offset == 8)
 						{
 							bit_offset = 0;
 							++byte_offset;
 						}
+						*/
 						value = (value - 1) / 3;
 					}
 				}
@@ -274,37 +347,57 @@ namespace TRIAD_6
 
 			constexpr void operator<<=(int shift) // Balanced Tritwise Shift Left Operator
 			{
+				data <<= 2 * shift;
 				for (int i = 0; i < shift; ++i)
 				{
-					uint8_t c_data = (data[0] & 0xC0);
+					data |= (0x01 << (2 * i));
+				}
+				data &= 0xFFF;
+				/*
+				for (int i = 0; i < shift; ++i)
+				{
+					uint32_t c_data = (data[0] & 0xC0);
 					data[0] <<= 2;
 					data[0] |= 0x01;
 					data[1] = (data[1] << 2) & 0x0F;
 					data[1] |= (c_data >> 6);
 				}
+				*/
 			}
 
 			constexpr void operator>>=(int shift) // Balanced Tritwise Shift Right Operator
 			{
+				data >>= 2 * shift;
+				for (int i = 0; i < shift; ++i)
+				{
+					data |= (0x400 >> (2 * i));
+				}
+				/*
 				for (int i = 0; i < shift; ++i)
 				{
 					data[0] >>= 2;
-					uint8_t c_data = (data[1] & 0x03);
+					uint32_t c_data = (data[1] & 0x03);
 					data[1] >>= 2;
 					data[1] |= 0x04;
 					data[0] |= (c_data << 6);
 				}
+				*/
 			}
 
 			constexpr void operator|=(Tryte source) // Balanced Tritwise OR Operator
 			{
-				size_t byte_offset = 0;
+				// size_t byte_offset = 0;
 				size_t bit_offset = 0;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					uint8_t src_data = ((source.data[byte_offset] >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
+					/*
+					uint32_t src_data = ((source.data[byte_offset] >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
+					*/
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
+					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
 						case 0x0:
@@ -313,12 +406,14 @@ namespace TRIAD_6
 							{
 								case 0x1:
 								{
-									data[byte_offset] |= (0x1 << bit_offset);
+									// data[byte_offset] |= (0x1 << bit_offset);
+									data |= (0x1 << bit_offset);
 									break;
 								}
 								case 0x2:
 								{
-									data[byte_offset] |= (0x2 << bit_offset);
+									// data[byte_offset] |= (0x2 << bit_offset);
+									data |= (0x2 << bit_offset);
 									break;
 								}
 							}
@@ -331,12 +426,14 @@ namespace TRIAD_6
 								case 0x0:
 								case 0x1:
 								{
-									data[byte_offset] |= (0x1 << bit_offset);
+									// data[byte_offset] |= (0x1 << bit_offset);
+									data |= (0x1 << bit_offset);
 									break;
 								}
 								case 0x2:
 								{
-									data[byte_offset] |= (0x2 << bit_offset);
+									// data[byte_offset] |= (0x2 << bit_offset);
+									data |= (0x2 << bit_offset);
 									break;
 								}
 							}
@@ -344,16 +441,19 @@ namespace TRIAD_6
 						}
 						case 0x2:
 						{
-							data[byte_offset] |= (0x2 << bit_offset);
+							// data[byte_offset] |= (0x2 << bit_offset);
+							data |= (0x2 << bit_offset);
 							break;
 						}
 					}
 					bit_offset += 2;
+					/*
 					if (bit_offset == 8)
 					{
 						bit_offset = 0;
 						++byte_offset;
 					}
+					*/
 				}
 			}
 
@@ -363,9 +463,14 @@ namespace TRIAD_6
 				size_t bit_offset = 0;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					uint8_t src_data = ((source.data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
-					uint8_t dest_data = ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
+					/*
+					uint32_t src_data = ((source.data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
+					uint32_t dest_data = ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
 					data[bit_offset / 8] &= ~(0x03 << (bit_offset % 8));
+					*/
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
+					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
 						case 0x1:
@@ -375,7 +480,8 @@ namespace TRIAD_6
 								case 0x1:
 								case 0x2:
 								{
-									data[bit_offset / 8] |= (0x1 << (bit_offset % 8));
+									// data[bit_offset / 8] |= (0x1 << (bit_offset % 8));
+									data |= (0x1 << bit_offset);
 									break;
 								}
 							}
@@ -387,12 +493,14 @@ namespace TRIAD_6
 							{
 								case 0x1:
 								{
-									data[bit_offset / 8] |= (0x1 << (bit_offset % 8));
+									// data[bit_offset / 8] |= (0x1 << (bit_offset % 8));
+									data |= (0x1 << bit_offset);
 									break;
 								}
 								case 0x2:
 								{
-									data[bit_offset / 8] |= (0x2 << (bit_offset % 8));
+									// data[bit_offset / 8] |= (0x2 << (bit_offset % 8));
+									data |= (0x2 << bit_offset);
 									break;
 								}
 							}
@@ -412,13 +520,18 @@ namespace TRIAD_6
 
 			constexpr void operator ^=(Tryte source) // Balanced Tritwise XOR Operator
 			{
-				size_t byte_offset = 0;
+				// size_t byte_offset = 0;
 				size_t bit_offset = 0;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					uint8_t src_data = ((source.data[byte_offset] >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
+					/*
+					uint32_t src_data = ((source.data[byte_offset] >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
+					*/
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
+					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
 						case 0x0:
@@ -427,12 +540,14 @@ namespace TRIAD_6
 							{
 								case 0x1:
 								{
-									data[byte_offset] |= (0x1 << bit_offset);
+									// data[byte_offset] |= (0x1 << bit_offset);
+									data |= (0x1 << bit_offset);
 									break;
 								}
 								case 0x2:
 								{
-									data[byte_offset] |= (0x2 << bit_offset);
+									// data[byte_offset] |= (0x2 << bit_offset);
+									data |= (0x2 << bit_offset);
 									break;
 								}
 							}
@@ -440,7 +555,8 @@ namespace TRIAD_6
 						}
 						case 0x1:
 						{
-							data[byte_offset] |= (0x1 << bit_offset);
+							// data[byte_offset] |= (0x1 << bit_offset);
+							data |= (0x1 << bit_offset);
 							break;
 						}
 						case 0x2:
@@ -449,12 +565,14 @@ namespace TRIAD_6
 							{
 								case 0x0:
 								{
-									data[byte_offset] |= (0x2 << bit_offset);
+									// data[byte_offset] |= (0x2 << bit_offset);
+									data |= (0x2 << bit_offset);
 									break;
 								}
 								case 0x1:
 								{
-									data[byte_offset] |= (0x1 << bit_offset);
+									// data[byte_offset] |= (0x1 << bit_offset);
+									data |= (0x1 << bit_offset);
 									break;
 								}
 							}
@@ -462,30 +580,35 @@ namespace TRIAD_6
 						}
 					}
 					bit_offset += 2;
+					/*
 					if (bit_offset == 8)
 					{
 						bit_offset = 0;
 						++byte_offset;
 					}
+					*/
 				}
 			}
 
-			constexpr operator int16_t() const
+			constexpr operator int32_t() const
 			{
-				int16_t value = 0;
+				int32_t value = 0;
 				size_t byte_offset = 0;
 				size_t bit_offset = 0;
-				int16_t multiplier = 1;
+				int32_t multiplier = 1;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					value += (((data[byte_offset] >> bit_offset) & 0x03) - 1) * multiplier;
+					// value += (((data[byte_offset] >> bit_offset) & 0x03) - 1) * multiplier;
+					value += (((data >> bit_offset) & 0x03) - 1) * multiplier;
 					multiplier *= 3;
 					bit_offset += 2;
+					/*
 					if (bit_offset == 8)
 					{
 						bit_offset = 0;
 						++byte_offset;
 					}
+					*/
 				}
 				return value;
 			}
@@ -493,7 +616,8 @@ namespace TRIAD_6
 			constexpr operator UTryte() const;
 			constexpr operator UWord() const;
 
-			std::array<uint8_t, 2> data;
+			// std::array<uint8_t, 2> data;
+			uint32_t data;
 		};
 
 		struct UTryte // Unsigned Tryte (for the unbalanced ternary system), use a 6-trit design for a tryte.
@@ -522,7 +646,7 @@ namespace TRIAD_6
 					size_t bit_offset = 0;
 					for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 					{
-						uint8_t c_data = u_value % 3;
+						uint32_t c_data = u_value % 3;
 						// data[byte_offset] |= (c_data << bit_offset);
 						data |= (c_data << bit_offset);
 						bit_offset += 2;
@@ -554,7 +678,7 @@ namespace TRIAD_6
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
 					bool carry = false;
-					uint8_t c_data = ((data >> bit_offset) & 0x03);
+					uint32_t c_data = ((data >> bit_offset) & 0x03);
 					++c_data;
 					if (c_data > 0x2)
 					{
@@ -577,7 +701,7 @@ namespace TRIAD_6
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
 					bool borrow = false;
-					uint8_t c_data = ((data >> bit_offset) & 0x03);
+					uint32_t c_data = ((data >> bit_offset) & 0x03);
 					--c_data;
 					if (c_data > 0x2)
 					{
@@ -601,7 +725,7 @@ namespace TRIAD_6
 				bool carry = false;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					uint8_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) + carry;
+					uint32_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) + carry;
 					if (c_data > 0x2)
 					{
 						carry = true;
@@ -623,7 +747,7 @@ namespace TRIAD_6
 				bool borrow = false;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					uint8_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) - borrow;
+					uint32_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) - borrow;
 					if (c_data > 0x2)
 					{
 						borrow = true;
@@ -661,8 +785,8 @@ namespace TRIAD_6
 					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
 					*/
-					uint8_t src_data = ((source.data >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data >> bit_offset) & 0x03);
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
 					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
@@ -723,8 +847,8 @@ namespace TRIAD_6
 					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
 					*/
-					uint8_t src_data = ((source.data >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data >> bit_offset) & 0x03);
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
 					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
@@ -785,8 +909,8 @@ namespace TRIAD_6
 					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
 					*/
-					uint8_t src_data = ((source.data >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data >> bit_offset) & 0x03);
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
 					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
@@ -840,12 +964,12 @@ namespace TRIAD_6
 				}
 			}
 
-			constexpr operator uint16_t() const
+			constexpr operator uint32_t() const
 			{
-				uint16_t value = 0;
+				uint32_t value = 0;
 				// size_t byte_offset = 0;
 				size_t bit_offset = 0;
-				uint16_t multiplier = 1;
+				uint32_t multiplier = 1;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
 					// value += ((data[byte_offset] >> bit_offset) & 0x03) * multiplier;
@@ -865,16 +989,17 @@ namespace TRIAD_6
 
 			constexpr operator Tryte() const // Unsigned Tryte to Signed Tryte Conversion
 			{
-				Tryte result = 0;
+				Tryte result = Tryte();
 				// size_t byte_offset = 0;
 				size_t bit_offset = 0;
 				bool carry = false;
 				uint16_t t_data = data + 0x555;
+				// uint16_t *r_data = reinterpret_cast<uint16_t *>(&result);
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
 					// uint8_t c_data = ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
-					uint8_t c_data = ((t_data >> bit_offset) & 0x03);
-					uint8_t tmp = c_data + carry;
+					uint32_t c_data = ((t_data >> bit_offset) & 0x03);
+					uint32_t tmp = c_data + carry;
 					if (tmp > 0x2)
 					{
 						carry = true;
@@ -884,8 +1009,9 @@ namespace TRIAD_6
 					{
 						carry = false;
 					}
-					result.data[bit_offset / 8] &= ~(0x03 << (bit_offset % 8));
-					result.data[bit_offset / 8] |= (tmp << (bit_offset % 8));
+					// result.data[bit_offset / 8] |= (tmp << (bit_offset % 8));
+					result.data |= (tmp << bit_offset);
+					// *r_data |= (tmp << bit_offset);
 					bit_offset += 2;
 					/*
 					if (bit_offset == 8)
@@ -926,7 +1052,7 @@ namespace TRIAD_6
 					size_t bit_offset = 0;
 					for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 					{
-						uint8_t c_data = u_value % 3;
+						uint32_t c_data = u_value % 3;
 						// data[bit_offset / 8] |= (c_data << (bit_offset % 8));
 						data |= (c_data << bit_offset);
 						bit_offset += 2;
@@ -978,7 +1104,7 @@ namespace TRIAD_6
 				for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 				{
 					bool borrow = false;
-					uint8_t c_data = ((data >> bit_offset) & 0x03);
+					uint32_t c_data = ((data >> bit_offset) & 0x03);
 					--c_data;
 					if (c_data > 0x2)
 					{
@@ -1004,7 +1130,7 @@ namespace TRIAD_6
 				for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 				{
 					// uint8_t c_data = ((data[byte_offset] >> bit_offset) & 0x03) + ((source.data[byte_offset] >> bit_offset) & 0x03) + carry;
-					uint8_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) + carry;
+					uint32_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) + carry;
 					if (c_data > 0x2)
 					{
 						carry = true;
@@ -1066,7 +1192,7 @@ namespace TRIAD_6
 				bool borrow = false;
 				for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 				{
-					uint8_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) - borrow;
+					uint32_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) - borrow;
 					if (c_data > 0x2)
 					{
 						borrow = true;
@@ -1126,8 +1252,8 @@ namespace TRIAD_6
 					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
 					*/
-					uint8_t src_data = ((source.data >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data >> bit_offset) & 0x03);
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
 					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
@@ -1188,8 +1314,8 @@ namespace TRIAD_6
 					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
 					*/
-					uint8_t src_data = ((source.data >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data >> bit_offset) & 0x03);
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
 					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
@@ -1250,8 +1376,8 @@ namespace TRIAD_6
 					uint8_t dest_data = ((data[byte_offset] >> bit_offset) & 0x03);
 					data[byte_offset] &= ~(0x03 << bit_offset);
 					*/
-					uint8_t src_data = ((source.data >> bit_offset) & 0x03);
-					uint8_t dest_data = ((data >> bit_offset) & 0x03);
+					uint32_t src_data = ((source.data >> bit_offset) & 0x03);
+					uint32_t dest_data = ((data >> bit_offset) & 0x03);
 					data &= ~(0x03 << bit_offset);
 					switch (src_data)
 					{
@@ -1330,7 +1456,7 @@ namespace TRIAD_6
 
 			constexpr operator Tryte() const // Unsigned Word to Signed Tryte Conversion
 			{
-				Tryte result = 0;
+				Tryte result = Tryte();
 				// size_t byte_offset = 0;
 				size_t bit_offset = 0;
 				bool carry = false;
@@ -1338,8 +1464,8 @@ namespace TRIAD_6
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
 					// uint8_t c_data = ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
-					uint8_t c_data = ((t_data >> bit_offset) & 0x03);
-					uint8_t tmp = c_data + carry;
+					uint32_t c_data = ((t_data >> bit_offset) & 0x03);
+					uint32_t tmp = c_data + carry;
 					if (tmp > 0x2)
 					{
 						carry = true;
@@ -1349,8 +1475,11 @@ namespace TRIAD_6
 					{
 						carry = false;
 					}
+					/*
 					result.data[bit_offset / 8] &= ~(0x03 << (bit_offset % 8));
 					result.data[bit_offset / 8] |= (tmp << (bit_offset % 8));
+					*/
+					result.data |= (tmp << bit_offset);
 					bit_offset += 2;
 					/*
 					if (bit_offset == 8)
@@ -1382,14 +1511,15 @@ namespace TRIAD_6
 
 		constexpr Tryte::operator UTryte() const // Signed Tryte to Unsigned Tryte Conversion
 		{
-			UTryte result = 0;
+			UTryte result = UTryte();
 			// size_t byte_offset = 0;
 			size_t bit_offset = 0;
 			bool borrow = false;
 			for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 			{
-				uint8_t c_data = ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
-				uint8_t tmp = c_data - 1 - borrow;
+				// uint32_t c_data = ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03);
+				uint32_t c_data = ((data >> bit_offset) & 0x03);
+				uint32_t tmp = c_data - 1 - borrow;
 				if (tmp > 0x2)
 				{
 					borrow = true;
@@ -1416,14 +1546,15 @@ namespace TRIAD_6
 
 		constexpr Tryte::operator UWord() const // Signed Tryte to Unsigned Word Conversion
 		{
-			UWord result = 0;
+			UWord result = UWord();
 			// size_t byte_offset = 0;
 			size_t bit_offset = 0;
 			bool borrow = false;
 			for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 			{
-				uint8_t c_data = (t_offset < 6) ? ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03) : 0x01;
-				uint8_t tmp = c_data - 1 - borrow;
+				// uint32_t c_data = (t_offset < 6) ? ((data[bit_offset / 8] >> (bit_offset % 8)) & 0x03) : 0x01;
+				uint32_t c_data = (t_offset < 6) ? ((data >> bit_offset) & 0x03) : 0x01;
+				uint32_t tmp = c_data - 1 - borrow;
 				if (tmp > 0x2)
 				{
 					borrow = true;
@@ -1450,7 +1581,7 @@ namespace TRIAD_6
 
 		constexpr UTryte::operator UWord() const // Unsigned Tryte To Unsigned Word Conversion
 		{
-			UWord result = 0;
+			UWord result = UWord();
 			/*
 			result.data[0] = data[0];
 			result.data[1] = data[1];
@@ -1723,50 +1854,49 @@ namespace TRIAD_6
 
 		constexpr Tryte operator~(Tryte source) // Balanced Tritwise NOT Operator
 		{
-			Tryte result = 0;
-			size_t byte_offset = 0;
+			Tryte result = Tryte();
+			// size_t byte_offset = 0;
 			size_t bit_offset = 0;
 			for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 			{
-				uint8_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
+				// uint32_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
+				uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
 				switch (c_data)
 				{
 					case 0x0:
 					{
-						result.data[byte_offset] &= ~(0x1 << bit_offset);
-						result.data[byte_offset] |= (0x2 << bit_offset);
+						// result.data[byte_offset] |= (0x2 << bit_offset);
+						result.data |= (0x2 << bit_offset);
 						break;
 					}
 					case 0x1:
 					{
-						result.data[byte_offset] |= (0x1 << bit_offset);
-						break;
-					}
-					case 0x2:
-					{
-						result.data[byte_offset] &= ~(0x3 << bit_offset);
+						// result.data[byte_offset] |= (0x1 << bit_offset);
+						result.data |= (0x1 << bit_offset);
 						break;
 					}
 				}
 				bit_offset += 2;
+				/*
 				if (bit_offset == 8)
 				{
 					bit_offset = 0;
 					++byte_offset;
 				}
+				*/
 			}
 			return result;
 		}
 
 		constexpr UTryte operator~(UTryte source) // Unbalanced Tritwise NOT Operator
 		{
-			UTryte result = 0;
+			UTryte result = UTryte();
 			// size_t byte_offset = 0;
 			size_t bit_offset = 0;
 			for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 			{
 				// uint8_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
-				uint8_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
 				switch (c_data)
 				{
 					case 0x1:
@@ -1796,13 +1926,13 @@ namespace TRIAD_6
 
 		constexpr UWord operator~(UWord source) // Unbalanced Tritwise NOT Operator (Word Variant)
 		{
-			UWord result = 0;
+			UWord result = UWord();
 			// size_t byte_offset = 0;
 			size_t bit_offset = 0;
 			for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 			{
 				// uint8_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
-				uint8_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
 				switch (c_data)
 				{
 					case 0x1:
@@ -1833,36 +1963,46 @@ namespace TRIAD_6
 		template <typename T> requires Utility::TypeCompatible<T, Tryte, UTryte>
 		inline T ReadTryte(const uint8_t *src, size_t tryte_address) // Read Tryte From Memory
 		{
-			T result;
+			T result = T();
 			size_t byte_address = (tryte_address * 2 * 6);
 			size_t tmp = byte_address / 8;
 			size_t src_bit_offset = byte_address % 8;
 			byte_address = tmp;
 			if (!src_bit_offset)
 			{
+				/*
 				if constexpr (std::is_same<T, Tryte>())
 				{
+					const uint16_t *src_data = reinterpret_cast<const uint16_t *>(&src[byte_address]);
+					uint16_t *dest_data = reinterpret_cast<uint16_t *>(&result.data);
+					*dest_data = (*src_data & 0xFFF);
 					result.data[0] = src[byte_address];
 					result.data[1] = (src[byte_address + 1] & 0xF);
 				}
-				else if constexpr (std::is_same<T, UTryte>())
-				{
+				*/
+				// else if constexpr (std::is_same<T, UTryte>())
+				// {
 					const uint16_t *data = reinterpret_cast<const uint16_t *>(&src[byte_address]);
 					result.data = (*data & 0xFFF);
-				}
+				// }
 			}
 			else
 			{
+				/*
 				if constexpr (std::is_same<T, Tryte>())
 				{
+					const uint16_t *src_data = reinterpret_cast<const uint16_t *>(&src[byte_address]);
+					uint16_t *dest_data = reinterpret_cast<uint16_t *>(&result.data);
 					result.data[0] = ((src[byte_address] >> 4) | (src[byte_address + 1] << 4));
 					result.data[1] = (src[byte_address + 1] >> 4);
+					*dest_data = (*src_data >> 4);
 				}
-				else if constexpr (std::is_same<T, UTryte>())
-				{
+				*/
+				// else if constexpr (std::is_same<T, UTryte>())
+				// {
 					const uint16_t *data = reinterpret_cast<const uint16_t *>(&src[byte_address]);
 					result.data = (*data >> 4);
-				}
+				// }
 			}
 			return result;
 		}
@@ -1876,32 +2016,36 @@ namespace TRIAD_6
 			byte_address = tmp;
 			if (!dest_bit_offset)
 			{
+				/*
 				if constexpr (std::is_same<T, Tryte>())
 				{
 					dest[byte_address] = value.data[0];
 					dest[byte_address + 1] &= ~(0x0F);
 					dest[byte_address + 1] |= (value.data[1] & 0xF);
 				}
-				else if constexpr (std::is_same<T, UTryte>())
-				{
+				*/
+				// else if constexpr (std::is_same<T, UTryte>())
+				// {
 					uint16_t *dest_data = reinterpret_cast<uint16_t *>(&dest[byte_address]);
 					*dest_data &= ~(0xF00);
 					*dest_data |= value.data;
-				}
+				// }
 			}
 			else
 			{
 				dest[byte_address] &= ~(0xF0);
+				/*
 				if constexpr (std::is_same<T, Tryte>())
 				{
 					dest[byte_address] |= (value.data[0] << 4);
 					dest[byte_address + 1] = ((value.data[0] >> 4) | (value.data[1] << 4));
 				}
-				else if constexpr (std::is_same<T, UTryte>())
-				{
+				*/
+				// else if constexpr (std::is_same<T, UTryte>())
+				// {
 					uint16_t *dest_data = reinterpret_cast<uint16_t *>(&dest[byte_address]);
 					*dest_data |= (value.data << 4);
-				}
+				// }
 			}
 		}
 

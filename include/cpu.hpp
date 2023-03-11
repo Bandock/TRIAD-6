@@ -96,7 +96,7 @@ namespace TRIAD_6
 		template <typename T, RegisterType destination_register> requires HasCurrentCycleState<T>
 		void LoadFromMemoryToRegister_ImmediateValueMode(T *obj)
 		{
-			BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
 			if constexpr (destination_register == RegisterType::A)
 			{
 				if ((obj->F & bu_flag_check) == bu_flag_check)
@@ -271,7 +271,7 @@ namespace TRIAD_6
 		template <typename T, RegisterType destination_register, IndexRegisterType index_register_used> requires HasCurrentCycleState<T>
 		void LoadFromMemoryToRegister_AddressMode(T *obj)
 		{
-			BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
 			obj->address += (static_cast<BCT::UWord>(obj->data_bus) << 6);
 			obj->data_bus = 0;
 			if constexpr (destination_register == RegisterType::A)
@@ -480,7 +480,7 @@ namespace TRIAD_6
 		template <typename T, RegisterType source_register, IndexRegisterType index_register_used> requires HasCurrentCycleState<T>
 		void StoreFromRegisterToMemory_AddressMode(T *obj)
 		{
-			BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
 			obj->address += (BCT::UWord(obj->data_bus) << 6);
 			obj->data_bus = 0;
 			if constexpr (source_register == RegisterType::A)
@@ -577,8 +577,8 @@ namespace TRIAD_6
 		template <typename T>
 		void AddFromMemoryToAccumulator_ImmediateValueMode(T *obj)
 		{
-			BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
-			BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+			constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
+			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
 			if ((obj->F & bu_flag_check) == bu_flag_check)
 			{
 				BCT::Tryte tmp = obj->A + obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
@@ -586,8 +586,8 @@ namespace TRIAD_6
 				{
 					tmp += BCT::Tryte(1);
 				}
-				int16_t A_b = obj->A;
-				int16_t tmp_b = tmp;
+				int32_t A_b = obj->A;
+				int32_t tmp_b = tmp;
 				if (tmp_b > 0)
 				{
 					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
@@ -619,8 +619,8 @@ namespace TRIAD_6
 				{
 					tmp += BCT::UTryte(1);
 				}
-				uint16_t A_b = A_u;
-				uint16_t tmp_b = tmp;
+				uint32_t A_b = A_u;
+				uint32_t tmp_b = tmp;
 				if (tmp_b > 0)
 				{
 					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
