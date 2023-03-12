@@ -644,6 +644,12 @@ namespace TRIAD_6
 			obj->current_cycle_state = CycleState::Fetch;
 		}
 
+		template <typename T, IndexRegisterType index_register_used> requires HasCurrentCycleState<T>
+		void AddFromMemoryToAccumulator_AddressMode(T *obj)
+		{
+			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+		}
+
 		template <typename T, RegisterType source_register, RegisterType destination_register>
 		void TransferFromRegisterToRegister(T *obj)
 		{
