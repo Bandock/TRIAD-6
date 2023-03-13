@@ -574,7 +574,7 @@ namespace TRIAD_6
 			obj->current_cycle_state = CycleState::Fetch;
 		}
 
-		template <typename T>
+		template <typename T> requires HasCurrentCycleState<T>
 		void AddFromMemoryToAccumulator_ImmediateValueMode(T *obj)
 		{
 			constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
@@ -647,7 +647,151 @@ namespace TRIAD_6
 		template <typename T, IndexRegisterType index_register_used> requires HasCurrentCycleState<T>
 		void AddFromMemoryToAccumulator_AddressMode(T *obj)
 		{
+			constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
 			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+			obj->address += (static_cast<BCT::UWord>(obj->data_bus) << 6);
+			if constexpr (index_register_used == IndexRegisterType::X)
+			{
+				obj->address += BCT::UWord(obj->X);
+			}
+			else if constexpr (index_register_used == IndexRegisterType::Y)
+			{
+				obj->address += BCT::UWord(obj->Y);
+			}
+			obj->data_bus = 0;
+			if ((obj->F & bu_flag_check) == bu_flag_check)
+			{
+				BCT::Tryte tmp = obj->A + obj->balanced_memory_read(obj->address, obj->CurrentMachine);
+				if ((obj->F & cb_flag_check) == cb_flag_check)
+				{
+					tmp += BCT::Tryte(1);
+				}
+				int32_t A_b = obj->A;
+				int32_t tmp_b = tmp;
+				if (tmp_b > 0)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				}
+				else if (tmp_b == 0)
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+				}
+				else
+				{
+					obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+				}
+				if (tmp_b < A_b)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, +1, +1, -1>();
+				}
+				else
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, 0, 0, -1>();
+				}
+				obj->A = tmp;
+				// fmt::print("Signed Accumulator:  {}\n", tmp_b);
+			}
+			else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
+			{
+				BCT::UTryte A_u = obj->A;
+				BCT::UTryte tmp = A_u + obj->unbalanced_memory_read(obj->address, obj->CurrentMachine);
+				if ((obj->F & cb_flag_check) == cb_flag_check)
+				{
+					tmp += BCT::UTryte(1);
+				}
+				uint32_t A_b = A_u;
+				uint32_t tmp_b = tmp;
+				if (tmp_b > 0)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				}
+				else
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+				}
+				if (tmp_b < A_b)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, +1, +1, -1>();
+				}
+				else
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, 0, 0, -1>();
+				}
+				obj->A = tmp;
+				// fmt::print("Unsigned Accumulator:  {}\n", tmp_b);
+			}
+			obj->address = 0;
+			obj->current_cycle_state = CycleState::Fetch;
+		}
+
+		template <typename T> requires HasCurrentCycleState<T>
+		void AddFromDataRegisterToAccumulator(T *obj)
+		{
+			constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
+			constexpr BCT::Tryte bu_flag_check = BCT::GetTryteFromTritData<-1, +1, -1, -1, -1, -1>();
+			if ((obj->F & bu_flag_check) == bu_flag_check)
+			{
+				BCT::Tryte tmp = obj->A + obj->D;
+				if ((obj->F & cb_flag_check) == cb_flag_check)
+				{
+					tmp += BCT::Tryte(1);
+				}
+				int32_t A_b = obj->A;
+				int32_t tmp_b = tmp;
+				if (tmp_b > 0)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				}
+				else if (tmp_b == 0)
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+				}
+				else
+				{
+					obj->F &= BCT::GetTryteFromTritData<+1, +1, +1, +1, +1, -1>();
+				}
+				if (tmp_b < A_b)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, +1, +1, -1>();
+				}
+				else
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, 0, 0, -1>();
+				}
+				obj->A = tmp;
+				// fmt::print("Signed Accumulator:  {}\n", tmp_b);
+			}
+			else if ((~(obj->F) & bu_flag_check) == bu_flag_check)
+			{
+				BCT::UTryte A_u = obj->A;
+				BCT::UTryte D_u = obj->D;
+				BCT::UTryte tmp = A_u + D_u;
+				if ((obj->F & cb_flag_check) == cb_flag_check)
+				{
+					tmp += BCT::UTryte(1);
+				}
+				uint32_t A_b = A_u;
+				uint32_t tmp_b = tmp;
+				if (tmp_b > 0)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				}
+				else
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, 0>();
+				}
+				if (tmp_b < A_b)
+				{
+					obj->F |= BCT::GetTryteFromTritData<-1, -1, -1, +1, +1, -1>();
+				}
+				else
+				{
+					obj->F ^= BCT::GetTryteFromTritData<-1, -1, -1, 0, 0, -1>();
+				}
+				obj->A = tmp;
+				// fmt::print("Unsigned Accumulator:  {}\n", tmp_b);
+			}
+			obj->current_cycle_state = CycleState::Fetch;
 		}
 
 		template <typename T, RegisterType source_register, RegisterType destination_register>
@@ -903,6 +1047,10 @@ namespace TRIAD_6
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '3', 'B'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::StoreFromRegisterToMemory_AddressMode<T, RegisterType::D, IndexRegisterType::Y>>>; // STD Op, Y
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '3', 'C'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::StoreFromRegisterToMemory_AddressMode<T, RegisterType::X, IndexRegisterType::Y>>>; // STX Op, Y
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '0'>())] = Instruction::AddFromMemoryToAccumulator_ImmediateValueMode<T>; // ADC #Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '1'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::AddFromMemoryToAccumulator_AddressMode<T, IndexRegisterType::None>>>; // ADC Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '2'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::AddFromMemoryToAccumulator_AddressMode<T, IndexRegisterType::X>>>; // ADC Op, X
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '3'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::AddFromMemoryToAccumulator_AddressMode<T, IndexRegisterType::Y>>>; // ADC Op, Y
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '4', '4'>())] = Instruction::AddFromDataRegisterToAccumulator<T>; // ADDC
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '8', '0'>())] = Instruction::TransferFromRegisterToRegister<T, RegisterType::C, RegisterType::A>; // TCA
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '8', '1'>())] = Instruction::TransferFromRegisterToRegister<T, RegisterType::D, RegisterType::A>; // TDA
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, '8', '2'>())] = Instruction::TransferFromRegisterToRegister<T, RegisterType::X, RegisterType::A>; // TXA
@@ -992,8 +1140,14 @@ namespace TRIAD_6
 			template <typename T, RegisterType source_register, IndexRegisterType index_register_used> requires HasCurrentCycleState<T>
 			friend void Instruction::StoreFromRegisterToMemory_AddressMode(T *obj);
 
-			template <typename T>
+			template <typename T> requires HasCurrentCycleState<T>
 			friend void Instruction::AddFromMemoryToAccumulator_ImmediateValueMode(T *obj);
+
+			template <typename T, IndexRegisterType index_register_used> requires HasCurrentCycleState<T>
+			friend void Instruction::AddFromMemoryToAccumulator_AddressMode(T *obj);
+
+			template <typename T> requires HasCurrentCycleState<T>
+			friend void Instruction::AddFromDataRegisterToAccumulator(T *obj);
 
 			template <typename T, RegisterType source_register, RegisterType destination_register>
 			friend void Instruction::TransferFromRegisterToRegister(T *obj);

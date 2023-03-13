@@ -958,7 +958,7 @@ namespace TRIAD_6
 								case 0x2:
 								{
 									// data[byte_offset] |= (0x1 << bit_offset);
-									t_data |= (0x2 << bit_offset);
+									t_data |= (0x1 << bit_offset);
 									break;
 								}
 							}
