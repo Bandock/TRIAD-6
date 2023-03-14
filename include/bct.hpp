@@ -1878,7 +1878,8 @@ namespace TRIAD_6
 			for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 			{
 				// uint32_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
-				uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				// uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				uint32_t c_data = ((source.data >> bit_offset) & 0x03);
 				switch (c_data)
 				{
 					case 0x0:
@@ -1914,7 +1915,8 @@ namespace TRIAD_6
 			for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 			{
 				// uint8_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
-				uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				// uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				uint32_t c_data = ((source.data >> bit_offset) & 0x03);
 				switch (c_data)
 				{
 					case 0x1:
@@ -1950,7 +1952,8 @@ namespace TRIAD_6
 			for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 			{
 				// uint8_t c_data = ((source.data[byte_offset] & (0x03 << bit_offset)) >> bit_offset);
-				uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				// uint32_t c_data = ((source.data & (0x03 << bit_offset)) >> bit_offset);
+				uint32_t c_data = ((source.data >> bit_offset) & 0x03);
 				switch (c_data)
 				{
 					case 0x1:
@@ -2045,7 +2048,7 @@ namespace TRIAD_6
 				// else if constexpr (std::is_same<T, UTryte>())
 				// {
 					uint16_t *dest_data = reinterpret_cast<uint16_t *>(&dest[byte_address]);
-					*dest_data &= ~(0xF00);
+					*dest_data &= ~(0xFFF);
 					*dest_data |= value.data;
 				// }
 			}
