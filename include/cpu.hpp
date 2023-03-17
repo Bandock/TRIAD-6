@@ -1030,6 +1030,15 @@ namespace TRIAD_6
 			obj->current_cycle_state = CycleState::Fetch;
 		}
 
+		template <typename T> requires HasCurrentCycleState<T>
+		void RelativeJumpToNewLocation(T *obj)
+		{
+			BCT::Tryte offset = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+			++obj->PC;
+			obj->PC += BCT::UWord(offset);
+			obj->current_cycle_state = CycleState::Fetch;
+		}
+
 		template <typename T, typename InstructionCallbackType, InstructionCallbackType next_callback, BranchTestType branch_test> requires HasCurrentCycleState<T>
 		void LoadDataIntoAddressUpperTryteAndPerformBranchTest(T *obj)
 		{
@@ -1164,7 +1173,7 @@ namespace TRIAD_6
 				}
 				else if constexpr (branch_test == BranchTestType::NotNeutral)
 				{
-					if (!((obj->F & ou_flag_check) != ou_flag_check && (~(obj->F & ou_flag_check) != ou_flag_check)))
+					if (!((obj->F & ou_flag_check) != ou_flag_check && (~(obj->F) & ou_flag_check) != ou_flag_check))
 					{
 						obj->instruction_callback = next_callback;
 					}
@@ -1295,6 +1304,273 @@ namespace TRIAD_6
 		{
 			obj->PC = obj->address;
 			obj->address = 0;
+			obj->current_cycle_state = CycleState::Fetch;
+		}
+
+		template <typename T, typename InstructionCallbackType, InstructionCallbackType next_callback, BranchTestType branch_test> requires HasCurrentCycleState<T>
+		void ReadBalancedTryteAndPerformBranchTest(T *obj)
+		{
+			obj->data_bus = obj->balanced_memory_read(obj->PC, obj->CurrentMachine);
+			++obj->PC;
+			if constexpr (branch_test == BranchTestType::Positive || branch_test == BranchTestType::NotPositive)
+			{
+				constexpr BCT::Tryte pzn_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				if constexpr (branch_test == BranchTestType::Positive)
+				{
+					if ((obj->F & pzn_flag_check) == pzn_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotPositive)
+				{
+					if (!((obj->F & pzn_flag_check) == pzn_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Zero || branch_test == BranchTestType::NotZero)
+			{
+				constexpr BCT::Tryte pzn_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				if constexpr (branch_test == BranchTestType::Zero)
+				{
+					if ((obj->F & pzn_flag_check) != pzn_flag_check && (~(obj->F) & pzn_flag_check) != pzn_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotZero)
+				{
+					if (!((obj->F & pzn_flag_check) != pzn_flag_check && (~(obj->F) & pzn_flag_check) != pzn_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Negative || branch_test == BranchTestType::NotNegative)
+			{
+				constexpr BCT::Tryte pzn_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, -1, -1, +1>();
+				if constexpr (branch_test == BranchTestType::Negative)
+				{
+					if ((~(obj->F) & pzn_flag_check) == pzn_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotNegative)
+				{
+					if (!((~(obj->F) & pzn_flag_check) == pzn_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Overflow || branch_test == BranchTestType::NotOverflow)
+			{
+				constexpr BCT::Tryte ou_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, -1, +1, -1>();
+				if constexpr (branch_test == BranchTestType::Overflow)
+				{
+					if ((obj->F & ou_flag_check) == ou_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotOverflow)
+				{
+					if (!((obj->F & ou_flag_check) == ou_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Neutral || branch_test == BranchTestType::NotNeutral)
+			{
+				constexpr BCT::Tryte ou_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, -1, +1, -1>();
+				if constexpr (branch_test == BranchTestType::Neutral)
+				{
+					if ((obj->F & ou_flag_check) != ou_flag_check && (~(obj->F) & ou_flag_check) != ou_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotNeutral)
+				{
+					if (!((obj->F & ou_flag_check) != ou_flag_check && (~(obj->F) & ou_flag_check) != ou_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Underflow || branch_test == BranchTestType::NotUnderflow)
+			{
+				constexpr BCT::Tryte ou_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, -1, +1, -1>();
+				if constexpr (branch_test == BranchTestType::Underflow)
+				{
+					if ((~(obj->F) & ou_flag_check) == ou_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotUnderflow)
+				{
+					if (!((~(obj->F) & ou_flag_check) == ou_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Carry || branch_test == BranchTestType::NotCarry)
+			{
+				constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
+				if constexpr (branch_test == BranchTestType::Carry)
+				{
+					if ((obj->F & cb_flag_check) == cb_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotCarry)
+				{
+					if (!((obj->F & cb_flag_check) == cb_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::NoCarryBorrow || branch_test == BranchTestType::NotNoCarryBorrow)
+			{
+				constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
+				if constexpr (branch_test == BranchTestType::NoCarryBorrow)
+				{
+					if ((obj->F & cb_flag_check) != cb_flag_check && (~(obj->F) & cb_flag_check) != cb_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotNoCarryBorrow)
+				{
+					if (!((obj->F & cb_flag_check) != cb_flag_check && (~(obj->F) & cb_flag_check) != cb_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+			else if constexpr (branch_test == BranchTestType::Borrow || branch_test == BranchTestType::NotBorrow)
+			{
+				constexpr BCT::Tryte cb_flag_check = BCT::GetTryteFromTritData<-1, -1, -1, +1, -1, -1>();
+				if constexpr (branch_test == BranchTestType::Borrow)
+				{
+					if ((~(obj->F) & cb_flag_check) == cb_flag_check)
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+				else if constexpr (branch_test == BranchTestType::NotBorrow)
+				{
+					if (!((~(obj->F) & cb_flag_check) == cb_flag_check))
+					{
+						obj->instruction_callback = next_callback;
+					}
+					else
+					{
+						obj->address = 0;
+						obj->current_cycle_state = CycleState::Fetch;
+					}
+				}
+			}
+		}
+
+		template <typename T> requires HasCurrentCycleState<T>
+		void RelativeBranchToNewLocation(T *obj)
+		{
+			obj->PC += BCT::UWord(obj->data_bus);
+			obj->data_bus = 0;
 			obj->current_cycle_state = CycleState::Fetch;
 		}
 
@@ -1461,6 +1737,25 @@ namespace TRIAD_6
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'C', 'G'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressUpperTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::BranchToNewLocation<T>, BranchTestType::NotCarry>>>; // BNCRRY Op
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'C', 'H'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressUpperTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::BranchToNewLocation<T>, BranchTestType::NotNoCarryBorrow>>>; // BNNCYBW Op
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'C', 'I'>())] = Instruction::ReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressLowerTryteAndReadUnbalancedTryte<T, InstructionCallbackType, Instruction::LoadDataIntoAddressUpperTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::BranchToNewLocation<T>, BranchTestType::NotBorrow>>>; // BNBBRW Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '0'>())] = Instruction::RelativeJumpToNewLocation<T>; // RJMP Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '1'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Positive>; // RBPOS Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '2'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Zero>; // RBZERO Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '3'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Negative>; // RBNEG Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '4'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotPositive>; // RBNPOS Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '5'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotZero>; // RBNZERO Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '6'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotNegative>; // RBNNEG Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '7'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Overflow>; // RBOVRF Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '8'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Neutral>; // RBNEUT Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', '9'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Underflow>; // RBUNDRF Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'A'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotOverflow>; // RBNOVRF Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'B'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotNeutral>; // RBNNEUT Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'C'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotUnderflow>; // RBNUNDRF Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'D'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Carry>; // RBCRRY Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'E'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NoCarryBorrow>; // RBNCYBW Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'F'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::Borrow>; // RBBRRW Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'G'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotCarry>; // RBNCRRY Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'H'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotNoCarryBorrow>; // RBNNCYBW Op
+		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'D', 'I'>())] = Instruction::ReadBalancedTryteAndPerformBranchTest<T, InstructionCallbackType, Instruction::RelativeBranchToNewLocation<T>, BranchTestType::NotBorrow>; // RBNBRRW Op
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'P', '0'>())] = Instruction::SetFlagStateOperation<T, SetFlagType::OverflowUnderflow>; // SETOU #Op
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'P', '1'>())] = Instruction::SetFlagStateOperation<T, SetFlagType::CarryBorrow>; // SETCB #Op
 		table[static_cast<uint16_t>(BCT::GetValueInSeptemvigesimal<BCT::UTryte, 'P', '2'>())] = Instruction::SetFlagStateOperation<T, SetFlagType::Interrupt>; // SETI #Op
@@ -1554,11 +1849,20 @@ namespace TRIAD_6
 			template <typename T> requires HasCurrentCycleState<T>
 			friend void Instruction::JumpToNewLocation(T *obj);
 
+			template <typename T> requires HasCurrentCycleState<T>
+			friend void Instruction::RelativeJumpToNewLocation(T *obj);
+
 			template <typename T, typename InstructionCallbackType, InstructionCallbackType next_callback, BranchTestType branch_test> requires HasCurrentCycleState<T>
 			friend void Instruction::LoadDataIntoAddressUpperTryteAndPerformBranchTest(T *obj);
 
 			template <typename T> requires HasCurrentCycleState<T>
 			friend void Instruction::BranchToNewLocation(T *obj);
+
+			template <typename T, typename InstructionCallbackType, InstructionCallbackType next_callback, BranchTestType branch_test> requires HasCurrentCycleState<T>
+			friend void Instruction::ReadBalancedTryteAndPerformBranchTest(T *obj);
+
+			template <typename T> requires HasCurrentCycleState<T>
+			friend void Instruction::RelativeBranchToNewLocation(T *obj);
 
 			template <typename T, SetFlagType flag> requires HasCurrentCycleState<T>
 			friend void Instruction::SetFlagStateOperation(T *obj);
