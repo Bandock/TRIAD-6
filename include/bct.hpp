@@ -754,7 +754,7 @@ namespace TRIAD_6
 				bool borrow = false;
 				for (size_t t_offset = 0; t_offset < 6; ++t_offset)
 				{
-					uint32_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) - borrow;
+					uint32_t c_data = ((data >> bit_offset) & 0x03) - ((source.data >> bit_offset) & 0x03) - borrow;
 					if (c_data > 0x2)
 					{
 						borrow = true;
@@ -1205,7 +1205,7 @@ namespace TRIAD_6
 				bool borrow = false;
 				for (size_t t_offset = 0; t_offset < 12; ++t_offset)
 				{
-					uint32_t c_data = ((data >> bit_offset) & 0x03) + ((source.data >> bit_offset) & 0x03) - borrow;
+					uint32_t c_data = ((data >> bit_offset) & 0x03) - ((source.data >> bit_offset) & 0x03) - borrow;
 					if (c_data > 0x2)
 					{
 						borrow = true;
